@@ -1,0 +1,12 @@
+20200331
+- Read template contents
+- Parse template contents
+- Write template contents to file
+- Build graph of all files first, then:
+    - Enforce only one layout file
+    - Read and save layout contents
+    - Parse template contents using layout contents
+
+- Change directories from hardcoded to cmd-line args
+- Consider:
+    - Standardized links?

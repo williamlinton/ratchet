@@ -5,5 +5,5 @@ cls
 mkdir build
 pushd build
 cd
-cl -Zi ..\src\parser.c /link /subsystem:console
+cl -Zi ..\src\parser.c shlwapi.lib /link /subsystem:console
 popd

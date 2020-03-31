@@ -1,4 +1,4 @@
-#define TEST_COUNT 3
+#define TEST_COUNT 6
 
 void getFileType_withHtmlExt_returnsHTML(int* failed)
 {
@@ -49,6 +49,17 @@ void getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT(int* failed)
     }
 }
 
+void getTemplateOutputFilename_replaces_rch_with_html(int* failed)
+{
+    char outputFilename[MAX_PATH];
+    getTemplateOutputFilename("test.rch", outputFilename);
+    if (!stringsAreEqual("test.html", outputFilename, 10, 10))
+    {
+        printf("getTemplateOutputFilename_replaces_rch_with_html(): outputFilename was %s", outputFilename);
+        *failed = 1;
+    }
+}
+
 int run_tests()
 {
     int failed = 0;
@@ -58,7 +69,10 @@ int run_tests()
     {
         &getFileType_withHtmlExt_returnsHTML,
         &getFileType_withHTMLExt_returnsOTHER,
-        &getFileType_withExeExt_returnsOTHER
+        &getFileType_withExeExt_returnsOTHER,
+        &getFileType_withRchExt_returnsTEMPLATE,
+        &getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT,
+        &getTemplateOutputFilename_replaces_rch_with_html,
     };
 
     int t;

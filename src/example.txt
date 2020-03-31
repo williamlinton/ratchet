@@ -1,0 +1,29 @@
+
+
+INPUT
+-----------------------------
+html/
+    _layout.rch
+    index.rch
+    about.rch
+    special.html
+    articles/
+        article1.rch
+        article2.rch
+
+css/
+    style.css
+
+
+OUTPUT
+-----------------------------
+html/
+    index.html
+    about.html
+    special.html [no transform]
+    articles/
+        article1.html
+        article2.html
+
+css/
+    style.css [no transform]

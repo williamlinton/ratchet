@@ -7,6 +7,9 @@
     - Read and save layout contents
     - Parse template contents using layout contents
 
+- Move output dir check after FindFirstFile (don't want to create output folder if source folder is invalid)
+- Add Readme.md
+
 - Change directories from hardcoded to cmd-line args
 - Consider:
     - Standardized links?

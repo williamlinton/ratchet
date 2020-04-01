@@ -96,13 +96,11 @@ int getFileType(char* filename)
     return OTHER;
 }
 
-int main(int argc, char *argv[])
+int parse(char* sourceDir, char* outputDir)
 {
-    run_tests();
-
-    TCHAR szDirBase[] = "C:\\Users\\William\\Projects\\nnj\\nononsensejavascript.com\\templates\\";
-    TCHAR szDir[] = "C:\\Users\\William\\Projects\\nnj\\nononsensejavascript.com\\templates\\*";
-    TCHAR outputDir[] = "C:\\Users\\William\\Projects\\nnj\\nononsensejavascript.com\\build\\";
+    printf("Parsing %s\n", sourceDir);
+    TCHAR szDir[MAX_PATH];
+    sprintf(szDir, "%s\\*", sourceDir);
 
     if (!PathIsDirectory(outputDir))
     {
@@ -134,12 +132,17 @@ int main(int argc, char *argv[])
     {
         char oldPath[MAX_PATH];
         char newPath[MAX_PATH];
-        sprintf(oldPath, "%s%s", szDirBase, ffd.cFileName);
-        sprintf(newPath, "%s%s", outputDir, ffd.cFileName);
-        printf("found file or dir...");
+        sprintf(oldPath, "%s\\%s", sourceDir, ffd.cFileName);
+        sprintf(newPath, "%s\\%s", outputDir, ffd.cFileName);
+        printf("found file or dir...\n");
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             printf("%s <DIR>\n", ffd.cFileName);
+            if (!stringsAreEqual(".", ffd.cFileName, 2, 2) && 
+                !stringsAreEqual("..", ffd.cFileName, 3, 3))
+            {
+                parse(oldPath, newPath);
+            }
         }
         else
         {

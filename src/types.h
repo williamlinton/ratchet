@@ -5,6 +5,7 @@ enum FILE_TYPE
     CSS,
     LAYOUT,
     TEMPLATE,
+    DIRECTORY,
     OTHER
 };
 
@@ -14,3 +15,11 @@ enum FILE_TYPE
 typedef int bool;
 
 #define TEMPLATE_EXTENSION "rch"
+
+typedef struct Commands
+{
+    char** oldPath;
+    char** newPath;
+    int* fileType;
+    int commandCount;
+} Commands;

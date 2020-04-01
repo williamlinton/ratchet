@@ -7,6 +7,8 @@
 #include "parser.h"
 #include "test.c"
 
+#define COMMAND_BLOCK_SIZE 1000
+
 bool stringsAreEqual(char* s1, char* s2, int length1, int length2)
 {
     int index = 0;
@@ -94,6 +96,75 @@ int getFileType(char* filename)
     }
 
     return OTHER;
+}
+
+void generate(char* sourceDir, char* outputDir)
+{
+    Commands commands;
+    commands.oldPath = (char *)malloc(sizeof(char) * MAX_PATH * COMMAND_BLOCK_SIZE);
+    commands.newPath = (char *)malloc(sizeof(char) * MAX_PATH * COMMAND_BLOCK_SIZE);
+    commands.fileType = (int *)malloc(sizeof(int) * COMMAND_BLOCK_SIZE);
+    commands.commandCount = 0;
+    memset(commands.oldPath, 0, sizeof(char) * MAX_PATH * COMMAND_BLOCK_SIZE);
+    memset(commands.newPath, 0, sizeof(char) * MAX_PATH * COMMAND_BLOCK_SIZE);
+    memset(commands.fileType, 0, sizeof(int) * COMMAND_BLOCK_SIZE);
+
+    scan(sourceDir, outputDir, &commands);
+
+    int i;
+    for (i = 0; i < commands.commandCount; i++)
+    {
+        printf("Command\n");
+        printf("-------\n");
+        printf("Old path: %s\n", commands.oldPath[i * MAX_PATH]);
+        printf("New path: %s\n", commands.newPath[i * MAX_PATH]);
+        printf("File type: %d\n", commands.fileType[i]);
+    }
+}
+
+void scan(char* sourceDir, char* outputDir, Commands* commands)
+{
+    printf("Scanning %s\n", sourceDir);
+    TCHAR szDir[MAX_PATH];
+    sprintf(szDir, "%s\\*", sourceDir);
+
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATA ffd;
+    hFind = FindFirstFile(szDir, &ffd);
+    if (INVALID_HANDLE_VALUE == hFind)
+    {
+        printf("invalid handle\n");
+        exit(1);
+    }
+
+    do
+    {
+        char oldPath[MAX_PATH];
+        char newPath[MAX_PATH];
+        sprintf(oldPath, "%s\\%s", sourceDir, ffd.cFileName);
+        sprintf(newPath, "%s\\%s", outputDir, ffd.cFileName);
+        printf("found file or dir...\n");
+        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            printf("%s <DIR>\n", ffd.cFileName);
+            if (!stringsAreEqual(".", ffd.cFileName, 2, 2) && 
+                !stringsAreEqual("..", ffd.cFileName, 3, 3))
+            {
+                commands->oldPath[commands->commandCount * MAX_PATH] = oldPath;
+                commands->newPath[commands->commandCount * MAX_PATH] = newPath;
+                commands->fileType[commands->commandCount] = DIRECTORY;
+                scan(oldPath, newPath, commands);
+            }
+        }
+        else
+        {
+            commands->oldPath[commands->commandCount * MAX_PATH] = oldPath;
+            commands->newPath[commands->commandCount * MAX_PATH] = newPath;
+            commands->fileType[commands->commandCount] = getFileType(ffd.cFileName);
+        }
+        commands->commandCount++;
+        
+    } while (FindNextFile(hFind, &ffd) != 0);
 }
 
 int parse(char* sourceDir, char* outputDir)
@@ -190,6 +261,4 @@ int parse(char* sourceDir, char* outputDir)
         }
         
     } while (FindNextFile(hFind, &ffd) != 0);
-    
-    printf("Hello!");
 }

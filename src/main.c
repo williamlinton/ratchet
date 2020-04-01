@@ -7,5 +7,5 @@ int main(int argc, char *argv[])
     run_tests();
     char szDir[] = "C:\\Users\\William\\Projects\\nnj\\nononsensejavascript.com\\templates";
     char outputDir[] = "C:\\Users\\William\\Projects\\nnj\\nononsensejavascript.com\\build";
-    parse(szDir, outputDir);
+    generate(szDir, outputDir);
 }

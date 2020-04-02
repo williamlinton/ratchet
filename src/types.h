@@ -23,3 +23,10 @@ typedef struct Commands
     int* fileType;
     int commandCount;
 } Commands;
+
+typedef struct TemplateSettings
+{
+    char layoutFilePath[MAX_PATH];
+    char* layoutFileContents;
+    int layoutFileContentsLength;
+} TemplateSettings;

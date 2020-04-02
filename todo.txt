@@ -1,4 +1,3 @@
-20200331
 - Read template contents
 - Parse template contents
 - Write template contents to file
@@ -15,3 +14,13 @@
     - Standardized links?
     - Move scan() directory checking to current directory?
         (so it could handle root output dir also?)
+
+
+20200402
+- Read layout contents to TemplatEsettings from validate()
+- Add case to parse() for templates, using TemplateSettings.layoutFileContents
+    for layout file
+Then:
+- Read template contents
+X Parse template contents
+- Write template contents to file

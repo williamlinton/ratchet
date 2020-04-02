@@ -114,12 +114,14 @@ void generate(char* sourceDir, char* outputDir)
     int i;
     for (i = 0; i < commands.commandCount; i++)
     {
-        printf("Command\n");
+        int address = i * MAX_PATH;
+        printf("\nCommand\n");
         printf("-------\n");
-        printf("Old path: %s\n", commands.oldPath[i * MAX_PATH]);
-        printf("New path: %s\n", commands.newPath[i * MAX_PATH]);
+        printf("Old path: %s\n", commands.oldPath + address);
+        printf("New path: %s\n", commands.newPath + address);
         printf("File type: %d\n", commands.fileType[i]);
     }
+    printf("\n(end of commands)\n");
 }
 
 void scan(char* sourceDir, char* outputDir, Commands* commands)
@@ -144,25 +146,36 @@ void scan(char* sourceDir, char* outputDir, Commands* commands)
         sprintf(oldPath, "%s\\%s", sourceDir, ffd.cFileName);
         sprintf(newPath, "%s\\%s", outputDir, ffd.cFileName);
         printf("found file or dir...\n");
+        int arrayOffset = commands->commandCount * MAX_PATH;
+        char* oldAddress = commands->oldPath + arrayOffset;
+        char* newAddress = commands->newPath + arrayOffset;
+        int fileType = -1;
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             printf("%s <DIR>\n", ffd.cFileName);
             if (!stringsAreEqual(".", ffd.cFileName, 2, 2) && 
                 !stringsAreEqual("..", ffd.cFileName, 3, 3))
             {
-                commands->oldPath[commands->commandCount * MAX_PATH] = oldPath;
-                commands->newPath[commands->commandCount * MAX_PATH] = newPath;
-                commands->fileType[commands->commandCount] = DIRECTORY;
-                scan(oldPath, newPath, commands);
+                fileType = DIRECTORY;
             }
         }
         else
         {
-            commands->oldPath[commands->commandCount * MAX_PATH] = oldPath;
-            commands->newPath[commands->commandCount * MAX_PATH] = newPath;
-            commands->fileType[commands->commandCount] = getFileType(ffd.cFileName);
+            fileType = getFileType(ffd.cFileName);
         }
-        commands->commandCount++;
+
+        if (fileType != -1)
+        {
+            sprintf(oldAddress, oldPath);
+            sprintf(newAddress, newPath);
+            commands->fileType[commands->commandCount] = fileType;
+            commands->commandCount++;
+
+            if (fileType == DIRECTORY)
+            {
+                scan(oldPath, newPath, commands);
+            }
+        }
         
     } while (FindNextFile(hFind, &ffd) != 0);
 }

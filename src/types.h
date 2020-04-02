@@ -18,8 +18,8 @@ typedef int bool;
 
 typedef struct Commands
 {
-    char** oldPath;
-    char** newPath;
+    char* oldPath;
+    char* newPath;
     int* fileType;
     int commandCount;
 } Commands;

@@ -1,22 +1,17 @@
-- Read template contents
-- Parse template contents
-- Write template contents to file
-- Build graph of all files first, then:
-    - Enforce only one layout file
-    - Read and save layout contents
-    - Parse template contents using layout contents
+Consider:
+- Standardized links?
+- Move scan() directory checking to current directory?
+    (so it could handle root output dir also?)
 
-- Move output dir check after FindFirstFile (don't want to create output folder if source folder is invalid)
-- Add Readme.md
-
+Eventually:
 - Change directories from hardcoded to cmd-line args
-- Consider:
-    - Standardized links?
-    - Move scan() directory checking to current directory?
-        (so it could handle root output dir also?)
+
+Important:
+- Add Readme.md
+- C99
 
 
-20200402
+Next time:
 - Read layout contents to TemplatEsettings from validate()
 - Add case to parse() for templates, using TemplateSettings.layoutFileContents
     for layout file

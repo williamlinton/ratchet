@@ -13,3 +13,5 @@
 - Change directories from hardcoded to cmd-line args
 - Consider:
     - Standardized links?
+    - Move scan() directory checking to current directory?
+        (so it could handle root output dir also?)

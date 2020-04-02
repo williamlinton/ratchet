@@ -110,6 +110,21 @@ void generate(char* sourceDir, char* outputDir)
     memset(commands.fileType, 0, sizeof(int) * COMMAND_BLOCK_SIZE);
 
     scan(sourceDir, outputDir, &commands);
+    if (!validate(&commands))
+    {
+        exit(1);
+    }
+    
+    if (!PathIsDirectory(outputDir))
+    {
+        if (!CreateDirectory(outputDir, NULL))
+        {
+            printf("Could not create output folder %s\n", outputDir);
+            exit(1);
+        }
+        else printf("Successfully created output directory!\n");
+    }
+    else printf("Output directory exists!\n");
 
     int i;
     for (i = 0; i < commands.commandCount; i++)
@@ -122,6 +137,34 @@ void generate(char* sourceDir, char* outputDir)
         printf("File type: %d\n", commands.fileType[i]);
     }
     printf("\n(end of commands)\n");
+
+    parse(&commands);
+}
+
+bool validate(Commands* commands)
+{
+    bool success = true;
+    int layoutFileCount = 0;
+    int i;
+    for (i = 0; i < commands->commandCount; i++)
+    {
+        if (commands->fileType[i] == LAYOUT)
+        {
+            layoutFileCount++;
+        }
+    }
+    if (layoutFileCount < 1)
+    {
+        printf("Error: Missing layout file!\n");
+        success = false;
+    }
+    else if (layoutFileCount > 1)
+    {
+        printf("Error: Can only have layout file!\n");
+        success = false;
+    }
+    
+    return success;
 }
 
 void scan(char* sourceDir, char* outputDir, Commands* commands)
@@ -180,7 +223,45 @@ void scan(char* sourceDir, char* outputDir, Commands* commands)
     } while (FindNextFile(hFind, &ffd) != 0);
 }
 
-int parse(char* sourceDir, char* outputDir)
+int parse(Commands* commands)
+{
+    int i;
+    for (i = 0; i < commands->commandCount; i++)
+    {
+        int pathOffset = i * MAX_PATH;
+        switch (commands->fileType[i])
+        {
+            case DIRECTORY:
+            {
+                char* outputDir = commands->newPath + pathOffset;
+                if (!PathIsDirectory(outputDir))
+                {
+                    if (!CreateDirectory(outputDir, NULL))
+                    {
+                        printf("Could not create output folder %s\n", outputDir);
+                        exit(1);
+                    }
+                    else printf("Successfully created output directory!\n");
+                }
+                else printf("Output directory exists!\n");
+            } break;
+
+            case JAVASCRIPT:
+            case CSS:
+            case HTML:
+            {
+                char* oldPath = commands->oldPath + pathOffset;
+                char* newPath = commands->newPath + pathOffset;
+                if (!CopyFile(oldPath, newPath, FALSE))
+                {
+                    printf("Failed to copy to %s\n", newPath);
+                }
+            }
+        }
+    }
+}
+
+int parseOld(char* sourceDir, char* outputDir)
 {
     printf("Parsing %s\n", sourceDir);
     TCHAR szDir[MAX_PATH];

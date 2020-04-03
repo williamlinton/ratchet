@@ -8,6 +8,8 @@
 #include "test.c"
 
 #define COMMAND_BLOCK_SIZE 1000
+#define MAX_LAYOUT_FILE_SIZE 4096000
+#define MAX_TEMPLATE_FILE_SIZE 4096000
 
 bool stringsAreEqual(char* s1, char* s2, int length1, int length2)
 {
@@ -110,7 +112,8 @@ void generate(char* sourceDir, char* outputDir)
     memset(commands.fileType, 0, sizeof(int) * COMMAND_BLOCK_SIZE);
 
     scan(sourceDir, outputDir, &commands);
-    if (!validate(&commands))
+    TemplateSettings settings;
+    if (!validate(&commands, &settings))
     {
         exit(1);
     }
@@ -138,19 +141,32 @@ void generate(char* sourceDir, char* outputDir)
     }
     printf("\n(end of commands)\n");
 
-    parse(&commands);
+    printf("Layout file path: %s\n", settings.layoutFilePath);
+    FILE* layoutFile = fopen(settings.layoutFilePath, "r");
+
+    settings.layoutFileContents = malloc(MAX_LAYOUT_FILE_SIZE);
+    settings.layoutFileContentsLength = fread(settings.layoutFileContents, sizeof(char), MAX_LAYOUT_FILE_SIZE, layoutFile);
+
+    parse(&commands, &settings);
 }
 
-bool validate(Commands* commands)
+void parseTemplate(char* templateContent, char* layoutContent, char* outputContent)
+{
+    sprintf(outputContent, templateContent);
+}
+
+bool validate(Commands* commands, TemplateSettings* settings)
 {
     bool success = true;
     int layoutFileCount = 0;
+    int layoutFileIndex = -1;
     int i;
     for (i = 0; i < commands->commandCount; i++)
     {
         if (commands->fileType[i] == LAYOUT)
         {
             layoutFileCount++;
+            layoutFileIndex = i;
         }
     }
     if (layoutFileCount < 1)
@@ -162,6 +178,10 @@ bool validate(Commands* commands)
     {
         printf("Error: Can only have layout file!\n");
         success = false;
+    }
+    else
+    {
+        sprintf(settings->layoutFilePath, commands->oldPath + layoutFileIndex * MAX_PATH);
     }
     
     return success;
@@ -223,7 +243,7 @@ void scan(char* sourceDir, char* outputDir, Commands* commands)
     } while (FindNextFile(hFind, &ffd) != 0);
 }
 
-int parse(Commands* commands)
+int parse(Commands* commands, TemplateSettings* settings)
 {
     int i;
     for (i = 0; i < commands->commandCount; i++)
@@ -256,7 +276,19 @@ int parse(Commands* commands)
                 {
                     printf("Failed to copy to %s\n", newPath);
                 }
-            }
+            } break;
+            case TEMPLATE:
+            {
+                char* outputContent = malloc(settings->layoutFileContentsLength);
+                parseTemplate(settings->layoutFileContents, commands->newPath + pathOffset, outputContent);
+                FILE* sourceFile = fopen(commands->oldPath + pathOffset, "r");
+                int fileSize = fread(outputContent, sizeof(char), MAX_TEMPLATE_FILE_SIZE, sourceFile);
+                fclose(sourceFile);
+
+                FILE* destFile = fopen(commands->newPath + pathOffset, "w");
+                fwrite(outputContent, sizeof(char), fileSize, destFile);
+                fclose(destFile);
+            } break;
         }
     }
 }

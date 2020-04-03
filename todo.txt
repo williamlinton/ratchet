@@ -9,13 +9,11 @@ Eventually:
 Important:
 - Add Readme.md
 - C99
+- fclose() everywhere necessary
 
 
 Next time:
-- Read layout contents to TemplatEsettings from validate()
-- Add case to parse() for templates, using TemplateSettings.layoutFileContents
-    for layout file
-Then:
-- Read template contents
-X Parse template contents
-- Write template contents to file
+Note: Not actually copying template file contents...
+- Parse layout contents
+- Dump template contents into layout and write to output file
+- Change extension to HTML for template newPath

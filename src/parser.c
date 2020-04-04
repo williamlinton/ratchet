@@ -26,6 +26,17 @@ bool stringsAreEqual(char* s1, char* s2, int length1, int length2)
     return true;
 }
 
+int getStringSize(char* str, bool includeNullTerminator)
+{
+    int size = 0;
+    int index = 0;
+    while (str[index++] != NULL)
+    {
+        size++;
+    }
+    return includeNullTerminator ? size + 1 : size;
+}
+
 void getTemplateOutputFilename(char* oldFilename, char* newFilename)
 {
     int indexPeriod = -1;
@@ -150,9 +161,15 @@ void generate(char* sourceDir, char* outputDir)
     parse(&commands, &settings);
 }
 
-void parseTemplate(char* templateContent, char* layoutContent, char* outputContent)
-{
-    sprintf(outputContent, templateContent);
+void parseTemplate(char* templateContent, char* layoutContent, char** outputContent, int* outputContentLength)
+{ 
+    int templateContentLength = getStringSize(templateContent, false);
+    int layoutContentLength = getStringSize(templateContent, false);
+    *outputContent = malloc(templateContentLength + layoutContentLength);
+    sprintf(*outputContent, templateContent);
+    printf("output content: %s\n", *outputContent);
+    *outputContentLength = getStringSize(*outputContent, false);
+    printf("output content length: %d\n", *outputContentLength);
 }
 
 bool validate(Commands* commands, TemplateSettings* settings)
@@ -279,14 +296,21 @@ int parse(Commands* commands, TemplateSettings* settings)
             } break;
             case TEMPLATE:
             {
-                char* outputContent = malloc(settings->layoutFileContentsLength);
-                parseTemplate(settings->layoutFileContents, commands->newPath + pathOffset, outputContent);
+                // char templateContent[MAX_TEMPLATE_FILE_SIZE + 1];
+                char* templateContent = malloc(MAX_TEMPLATE_FILE_SIZE);
                 FILE* sourceFile = fopen(commands->oldPath + pathOffset, "r");
-                int fileSize = fread(outputContent, sizeof(char), MAX_TEMPLATE_FILE_SIZE, sourceFile);
+                int templateFileSize = fread(templateContent, sizeof(char), MAX_TEMPLATE_FILE_SIZE, sourceFile);
+                printf("TEMPLATE CONTENT:%s\n", templateContent);
                 fclose(sourceFile);
 
+                char* outputContent;
+                int outputFileSize;
+                parseTemplate(templateContent, settings->layoutFileContents, &outputContent, &outputFileSize);
+                printf("output content in parse(): %s\n", outputContent);
+                printf("output content length in parse(): %d\n", outputFileSize);
+
                 FILE* destFile = fopen(commands->newPath + pathOffset, "w");
-                fwrite(outputContent, sizeof(char), fileSize, destFile);
+                fwrite(outputContent, sizeof(char), outputFileSize, destFile);
                 fclose(destFile);
             } break;
         }

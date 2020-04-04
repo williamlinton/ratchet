@@ -5,6 +5,8 @@ Consider:
 
 Eventually:
 - Change directories from hardcoded to cmd-line args
+- Find out: Can we reliably use string NULL terminators to detect the end of a string?
+    - Do we want to handle a case where parsed file contents would not have one?
 
 Important:
 - Add Readme.md

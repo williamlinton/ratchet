@@ -60,6 +60,50 @@ void getTemplateOutputFilename_replaces_rch_with_html(int* failed)
     }
 }
 
+void getStringSize_withEmptyString_andNotIncludeNull_returns0(int* failed)
+{
+    char* str = "";
+    int size = getStringSize(str, false);
+    if (size != 0)
+    {
+        printf("getStringSize_withEmptyString_andNotIncludeNull_returns0(): size was %d", size);
+        *failed = 1;
+    }
+}
+
+void getStringSize_withEmptyString_andIncludeNull_returns0(int* failed)
+{
+    char* str = "";
+    int size = getStringSize(str, true);
+    if (size != 1)
+    {
+        printf("getStringSize_withEmptyString_andIncludeNull_returns0(): size was %d", size);
+        *failed = 1;
+    }
+}
+
+void getStringSize_withString_HelloWorld_andNotIncludeNull_returns10(int* failed)
+{
+    char* str = "";
+    int size = getStringSize(str, false);
+    if (size != 10)
+    {
+        printf("getStringSize_withString_HelloWorld_andNotIncludeNull_returns10(): size was %d", size);
+        *failed = 1;
+    }
+}
+
+void getStringSize_withString_HelloWorld_andIncludeNull_returns11(int* failed)
+{
+    char* str = "";
+    int size = getStringSize(str, true);
+    if (size != 11)
+    {
+        printf("getStringSize_withString_HelloWorld_andIncludeNull_returns11): size was %d", size);
+        *failed = 1;
+    }
+}
+
 int run_tests()
 {
     int failed = 0;

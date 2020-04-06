@@ -10,6 +10,25 @@
 #define COMMAND_BLOCK_SIZE 1000
 #define MAX_LAYOUT_FILE_SIZE 4096000
 #define MAX_TEMPLATE_FILE_SIZE 4096000
+#define TD_CONTENT "{{CONTENT}}"
+#define MAX_TD_SIZE 20
+
+enum TemplateDirective
+{
+    TDContent
+};
+
+char** substr(char* input, int startIndex, int length)
+{
+    int i;
+    char* output = malloc(length);
+    for (i = startIndex; i < startIndex + length; i++)
+    {
+        output[i] = input[i];
+        if (input[i] == NULL) break;
+    }
+    return &output;
+}
 
 bool stringsAreEqual(char* s1, char* s2, int length1, int length2)
 {
@@ -161,13 +180,83 @@ void generate(char* sourceDir, char* outputDir)
     parse(&commands, &settings);
 }
 
+typedef struct DirectiveSearchResult
+{
+    bool found;
+    int startIndex;
+    int endIndex;
+    int fileType;
+} DirectiveSearchResult;
+
+DirectiveSearchResult* findDirective(char* content, char* directive)
+{
+
+}
+
 void parseTemplate(char* templateContent, char* layoutContent, char** outputContent, int* outputContentLength)
 { 
     int templateContentLength = getStringSize(templateContent, false);
     int layoutContentLength = getStringSize(templateContent, false);
     *outputContent = malloc(templateContentLength + layoutContentLength);
+
+    char* td_content = TD_CONTENT;
+    int td_content_size = getStringSize(td_content, false);
+    printf("td_content: %s\n", td_content);
+
+    char found_td[MAX_TD_SIZE];
+    int found_td_index = -1;
+    int found_td_index_start = -1;
+    bool found_full_td = false;
+    int li;
+    for (li = 0; li < layoutContentLength; li++)
+    {
+        // Start found td
+        char currentChar = layoutContent[li];
+        if (found_td_index == -1)
+        {
+            if (td_content[0] == currentChar)
+            {
+                found_full_td = true;
+                break;
+            }
+        }
+        else
+        {
+            // Replace and reset found td
+            if ((found_td_index + 1) == td_content_size)
+            {
+                found_td_index = -1;
+                found_td_index_start = -1;
+            }
+            // Continue found td
+            else if (td_content[found_td_index + 1] == currentChar)
+            {
+                found_td[++found_td_index] = currentChar;
+            }
+            // Reset found td
+            else
+            {
+                found_td_index = -1;
+                found_td_index_start = -1;
+            }
+            
+        }
+    }
+
+    if (found_full_td)
+    {
+        char* preContent = substr(layoutContent, 0, found_td_index_start);
+        int tdEndIndex = found_td_index_start + td_content_size;
+        char* postContent = substr(layoutContent, tdEndIndex, layoutContentLength - tdEndIndex);
+        printf("Templated:\n%s%s%s\n", preContent, templateContent, postContent);
+    }
+
+#if 1
     sprintf(*outputContent, templateContent);
     printf("output content: %s\n", *outputContent);
+#endif
+
+
     *outputContentLength = getStringSize(*outputContent, false);
     printf("output content length: %d\n", *outputContentLength);
 }
@@ -314,6 +403,7 @@ int parse(Commands* commands, TemplateSettings* settings)
                 fclose(destFile);
             } break;
         }
+
     }
 }
 

@@ -30,3 +30,10 @@ typedef struct TemplateSettings
     char* layoutFileContents;
     int layoutFileContentsLength;
 } TemplateSettings;
+
+typedef struct DirectiveSearchResult
+{
+    bool found;
+    int startIndex;
+    int endIndex;
+} DirectiveSearchResult;

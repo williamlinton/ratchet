@@ -7,6 +7,8 @@ Eventually:
 - Change directories from hardcoded to cmd-line args
 - Find out: Can we reliably use string NULL terminators to detect the end of a string?
     - Do we want to handle a case where parsed file contents would not have one?
+- Use macro instead of #if LOGGING
+    - log("a", asdf)
 
 Important:
 - Add Readme.md
@@ -15,9 +17,7 @@ Important:
 
 
 Next time:
-- Pull out directive search code into separate function and write unit tests
-    - See findDirective() function
-Note: Not actually copying template file contents...
+- make findFirstDirective() work (include unit tests)
 - Parse layout contents
 - Dump template contents into layout and write to output file
 - Change extension to HTML for template newPath

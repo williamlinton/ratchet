@@ -12,6 +12,7 @@
 #define MAX_TEMPLATE_FILE_SIZE 4096000
 #define TD_CONTENT "{{CONTENT}}"
 #define MAX_TD_SIZE 20
+#define LOGGING 0
 
 enum TemplateDirective
 {
@@ -155,10 +156,19 @@ void generate(char* sourceDir, char* outputDir)
             printf("Could not create output folder %s\n", outputDir);
             exit(1);
         }
-        else printf("Successfully created output directory!\n");
+        else { 
+            #if LOGGING
+            printf("Successfully created output directory!\n");
+            #endif
+        }
     }
-    else printf("Output directory exists!\n");
+    else { 
+        #if LOGGING
+        printf("Output directory exists!\n");
+        #endif
+    }
 
+    #if LOGGING
     int i;
     for (i = 0; i < commands.commandCount; i++)
     {
@@ -170,8 +180,9 @@ void generate(char* sourceDir, char* outputDir)
         printf("File type: %d\n", commands.fileType[i]);
     }
     printf("\n(end of commands)\n");
-
     printf("Layout file path: %s\n", settings.layoutFilePath);
+    #endif
+
     FILE* layoutFile = fopen(settings.layoutFilePath, "r");
 
     settings.layoutFileContents = malloc(MAX_LAYOUT_FILE_SIZE);
@@ -180,17 +191,56 @@ void generate(char* sourceDir, char* outputDir)
     parse(&commands, &settings);
 }
 
-typedef struct DirectiveSearchResult
+DirectiveSearchResult findFirstDirective(char* content, char* directive)
 {
-    bool found;
-    int startIndex;
-    int endIndex;
-    int fileType;
-} DirectiveSearchResult;
+    int td_content_size = getStringSize(directive, false);
+    int layoutContentLength = getStringSize(content, false);
+    DirectiveSearchResult result;
+    result.startIndex = -1;
+    result.endIndex = -1;
+    result.found = false;
 
-DirectiveSearchResult* findDirective(char* content, char* directive)
-{
-
+    char found_td[MAX_TD_SIZE];
+    int found_td_index = -1;
+    int found_td_index_start = -1;
+    bool found_full_td = false;
+    int li;
+    for (li = 0; li < layoutContentLength; li++)
+    {
+        // Start found td
+        char currentChar = content[li];
+        if (found_td_index == -1)
+        {
+            if (directive[0] == currentChar)
+            {
+                found_full_td = true;
+                break;
+            }
+        }
+        else
+        {
+            // Replace and reset found td
+            if ((found_td_index + 1) == td_content_size)
+            {
+                found_td_index = -1;
+                found_td_index_start = -1;
+            }
+            // Continue found td
+            else if (directive[found_td_index + 1] == currentChar)
+            {
+                found_td[++found_td_index] = currentChar;
+            }
+            // Reset found td
+            else
+            {
+                found_td_index = -1;
+                found_td_index_start = -1;
+            }
+            
+        }
+    }
+   
+    return result;
 }
 
 void parseTemplate(char* templateContent, char* layoutContent, char** outputContent, int* outputContentLength)
@@ -201,7 +251,6 @@ void parseTemplate(char* templateContent, char* layoutContent, char** outputCont
 
     char* td_content = TD_CONTENT;
     int td_content_size = getStringSize(td_content, false);
-    printf("td_content: %s\n", td_content);
 
     char found_td[MAX_TD_SIZE];
     int found_td_index = -1;
@@ -248,17 +297,22 @@ void parseTemplate(char* templateContent, char* layoutContent, char** outputCont
         char* preContent = substr(layoutContent, 0, found_td_index_start);
         int tdEndIndex = found_td_index_start + td_content_size;
         char* postContent = substr(layoutContent, tdEndIndex, layoutContentLength - tdEndIndex);
-        printf("Templated:\n%s%s%s\n", preContent, templateContent, postContent);
+        //printf("Templated:\n%s%s%s\n", preContent, templateContent, postContent);
     }
 
 #if 1
     sprintf(*outputContent, templateContent);
+
+    #if LOGGING
     printf("output content: %s\n", *outputContent);
+    #endif
 #endif
 
-
     *outputContentLength = getStringSize(*outputContent, false);
+
+    #if LOGGING
     printf("output content length: %d\n", *outputContentLength);
+    #endif
 }
 
 bool validate(Commands* commands, TemplateSettings* settings)
@@ -295,7 +349,9 @@ bool validate(Commands* commands, TemplateSettings* settings)
 
 void scan(char* sourceDir, char* outputDir, Commands* commands)
 {
+    #if LOGGING
     printf("Scanning %s\n", sourceDir);
+    #endif
     TCHAR szDir[MAX_PATH];
     sprintf(szDir, "%s\\*", sourceDir);
 
@@ -314,14 +370,18 @@ void scan(char* sourceDir, char* outputDir, Commands* commands)
         char newPath[MAX_PATH];
         sprintf(oldPath, "%s\\%s", sourceDir, ffd.cFileName);
         sprintf(newPath, "%s\\%s", outputDir, ffd.cFileName);
+        #if LOGGING
         printf("found file or dir...\n");
+        #endif
         int arrayOffset = commands->commandCount * MAX_PATH;
         char* oldAddress = commands->oldPath + arrayOffset;
         char* newAddress = commands->newPath + arrayOffset;
         int fileType = -1;
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
+            #if LOGGING
             printf("%s <DIR>\n", ffd.cFileName);
+            #endif
             if (!stringsAreEqual(".", ffd.cFileName, 2, 2) && 
                 !stringsAreEqual("..", ffd.cFileName, 3, 3))
             {
@@ -367,9 +427,19 @@ int parse(Commands* commands, TemplateSettings* settings)
                         printf("Could not create output folder %s\n", outputDir);
                         exit(1);
                     }
-                    else printf("Successfully created output directory!\n");
+                    else
+                    {
+                        #if LOGGING
+                        printf("Successfully created output directory!\n");
+                        #endif
+                    }
                 }
-                else printf("Output directory exists!\n");
+                else 
+                {
+                    #if LOGGING
+                    printf("Output directory exists!\n");
+                    #endif
+                }
             } break;
 
             case JAVASCRIPT:
@@ -389,14 +459,21 @@ int parse(Commands* commands, TemplateSettings* settings)
                 char* templateContent = malloc(MAX_TEMPLATE_FILE_SIZE);
                 FILE* sourceFile = fopen(commands->oldPath + pathOffset, "r");
                 int templateFileSize = fread(templateContent, sizeof(char), MAX_TEMPLATE_FILE_SIZE, sourceFile);
+                
+                #if LOGGING
                 printf("TEMPLATE CONTENT:%s\n", templateContent);
+                #endif
+
                 fclose(sourceFile);
 
                 char* outputContent;
                 int outputFileSize;
                 parseTemplate(templateContent, settings->layoutFileContents, &outputContent, &outputFileSize);
+
+                #if LOGGING
                 printf("output content in parse(): %s\n", outputContent);
                 printf("output content length in parse(): %d\n", outputFileSize);
+                #endif
 
                 FILE* destFile = fopen(commands->newPath + pathOffset, "w");
                 fwrite(outputContent, sizeof(char), outputFileSize, destFile);
@@ -405,100 +482,4 @@ int parse(Commands* commands, TemplateSettings* settings)
         }
 
     }
-}
-
-int parseOld(char* sourceDir, char* outputDir)
-{
-    printf("Parsing %s\n", sourceDir);
-    TCHAR szDir[MAX_PATH];
-    sprintf(szDir, "%s\\*", sourceDir);
-
-    if (!PathIsDirectory(outputDir))
-    {
-        if (!CreateDirectory(outputDir, NULL))
-        {
-            printf("Could not create output folder %s\n", outputDir);
-            exit(1);
-        }
-        else
-        {
-            printf("Successfully created output directory!\n");
-        }
-    }
-    else
-    {
-        printf("Output directory exists!\n");
-    }
-
-    HANDLE hFind = INVALID_HANDLE_VALUE;
-    WIN32_FIND_DATA ffd;
-    hFind = FindFirstFile(szDir, &ffd);
-    if (INVALID_HANDLE_VALUE == hFind)
-    {
-        printf("invalid handle\n");
-        exit(1);
-    }
-
-    do
-    {
-        char oldPath[MAX_PATH];
-        char newPath[MAX_PATH];
-        sprintf(oldPath, "%s\\%s", sourceDir, ffd.cFileName);
-        sprintf(newPath, "%s\\%s", outputDir, ffd.cFileName);
-        printf("found file or dir...\n");
-        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-            printf("%s <DIR>\n", ffd.cFileName);
-            if (!stringsAreEqual(".", ffd.cFileName, 2, 2) && 
-                !stringsAreEqual("..", ffd.cFileName, 3, 3))
-            {
-                parse(oldPath, newPath);
-            }
-        }
-        else
-        {
-            switch (getFileType(ffd.cFileName))
-            {
-                case HTML:
-                {
-                    printf("%s <HTML>\n", ffd.cFileName);
-                    if (!CopyFile(oldPath, newPath, FALSE))
-                    {
-                        printf("Failed to copy to %s\n", newPath);
-                    }
-                } break;
-                case JAVASCRIPT:
-                {
-                    printf("%s <JAVASCRIPT>\n", ffd.cFileName);
-                    if (!CopyFile(oldPath, newPath, FALSE))
-                    {
-                        printf("Failed to copy to %s\n", newPath);
-                    }
-                } break;
-                case CSS:
-                {
-                    printf("%s <CSS>\n", ffd.cFileName);
-                    if (!CopyFile(oldPath, newPath, FALSE))
-                    {
-                        printf("Failed to copy to %s\n", newPath);
-                    }
-                } break;
-                case TEMPLATE:
-                {
-                    printf("%s <TEMPLATE>\n", ffd.cFileName);
-                    char outputFilename[MAX_PATH];
-                    getTemplateOutputFilename(ffd.cFileName, outputFilename);
-                    sprintf(newPath, "%s%s", outputDir, outputFilename);
-                    printf("New path for template file: %s\n", newPath);
-                    FILE* existingFile = fopen(oldPath, "r");
-                    FILE* newfile = fopen(newPath, "w");
-                } break;
-                case LAYOUT:
-                {
-                    printf("%s <LAYOUT>\n", ffd.cFileName);
-                } break;
-            }
-        }
-        
-    } while (FindNextFile(hFind, &ffd) != 0);
 }

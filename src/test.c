@@ -1,107 +1,85 @@
-#define TEST_COUNT 6
+#define ASSERT(x, msg, ...) if (!x) { printf(msg, __VA_ARGS__); *failed = 1; }
+#define TEST(name) void name(int* failed)
 
-void getFileType_withHtmlExt_returnsHTML(int* failed)
+#define TEST_COUNT 11
+
+TEST(getFileType_withHtmlExt_returnsHTML)
 {
     int fileType = getFileType("test.html");
-    if (fileType != HTML)
-    {
-        *failed = 1;
-    }
+    ASSERT(fileType == HTML, "wrong file type: %d", fileType);
 }
 
-void getFileType_withHTMLExt_returnsOTHER(int* failed)
+TEST(getFileType_withHTMLExt_returnsOTHER)
 {
     int fileType = getFileType("test.HTML");
-    if (fileType != OTHER)
-    {
-        printf("getFileType_withHTMLExt_returnsOTHER(): test.HTML was %d", fileType);
-        *failed = 1;
-    }
+    ASSERT(fileType == OTHER, "getFileType_withHTMLExt_returnsOTHER(): test.HTML was %d", fileType);
 }
 
-void getFileType_withExeExt_returnsOTHER(int* failed)
+TEST(getFileType_withExeExt_returnsOTHER)
 {
     int fileType = getFileType("test.exe");
-    if (fileType != OTHER)
-    {
-        printf("getFileType_withHTMLExt_returnsOTHER(): test.exe was %d", fileType);
-        *failed = 1;
-    }
+    ASSERT(fileType == OTHER, "getFileType_withHTMLExt_returnsOTHER(): test.exe was %d", fileType);
 }
 
-void getFileType_withRchExt_returnsTEMPLATE(int* failed)
+TEST(getFileType_withRchExt_returnsTEMPLATE)
 {
     int fileType = getFileType("test.rch");
-    if (fileType != TEMPLATE)
-    {
-        printf("getFileType_withRchExt_returnsTEMPLATE(): test.rch was %d", fileType);
-        *failed = 1;
-    }
+    ASSERT(fileType == TEMPLATE, "getFileType_withRchExt_returnsTEMPLATE(): test.rch was %d", fileType);
 }
 
-void getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT(int* failed)
+TEST(getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT)
 {
     int fileType = getFileType("_test.rch");
-    if (fileType != LAYOUT)
-    {
-        printf("getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT(): _test.rch was %d", fileType);
-        *failed = 1;
-    }
+    ASSERT(fileType == LAYOUT, "getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT(): _test.rch was %d", fileType);
 }
 
-void getTemplateOutputFilename_replaces_rch_with_html(int* failed)
+TEST(getTemplateOutputFilename_replaces_rch_with_html)
 {
     char outputFilename[MAX_PATH];
     getTemplateOutputFilename("test.rch", outputFilename);
-    if (!stringsAreEqual("test.html", outputFilename, 10, 10))
-    {
-        printf("getTemplateOutputFilename_replaces_rch_with_html(): outputFilename was %s", outputFilename);
-        *failed = 1;
-    }
+    ASSERT(stringsAreEqual("test.html", outputFilename, 10, 10), 
+        "getTemplateOutputFilename_replaces_rch_with_html(): outputFilename was %s", outputFilename);
 }
 
-void getStringSize_withEmptyString_andNotIncludeNull_returns0(int* failed)
+TEST(getStringSize_withEmptyString_andNotIncludeNull_returns0)
 {
     char* str = "";
     int size = getStringSize(str, false);
-    if (size != 0)
-    {
-        printf("getStringSize_withEmptyString_andNotIncludeNull_returns0(): size was %d", size);
-        *failed = 1;
-    }
+    ASSERT(size == 0, 
+        "getStringSize_withEmptyString_andNotIncludeNull_returns0(): size was %d", size);
 }
 
-void getStringSize_withEmptyString_andIncludeNull_returns0(int* failed)
+TEST(getStringSize_withEmptyString_andIncludeNull_returns0)
 {
     char* str = "";
     int size = getStringSize(str, true);
-    if (size != 1)
-    {
-        printf("getStringSize_withEmptyString_andIncludeNull_returns0(): size was %d", size);
-        *failed = 1;
-    }
+    ASSERT(size == 1, "getStringSize_withEmptyString_andIncludeNull_returns0(): size was %d", size);
 }
 
-void getStringSize_withString_HelloWorld_andNotIncludeNull_returns10(int* failed)
+TEST(getStringSize_withString_HelloWorld_andNotIncludeNull_returns10)
 {
-    char* str = "";
+    char* str = "HelloWorld";
     int size = getStringSize(str, false);
-    if (size != 10)
-    {
-        printf("getStringSize_withString_HelloWorld_andNotIncludeNull_returns10(): size was %d", size);
-        *failed = 1;
-    }
+    ASSERT(size == 10, "getStringSize_withString_HelloWorld_andNotIncludeNull_returns10(): size was %d", size);
 }
 
-void getStringSize_withString_HelloWorld_andIncludeNull_returns11(int* failed)
+TEST(getStringSize_withString_HelloWorld_andIncludeNull_returns11)
 {
-    char* str = "";
+    char* str = "HelloWorld";
     int size = getStringSize(str, true);
-    if (size != 11)
-    {
-        printf("getStringSize_withString_HelloWorld_andIncludeNull_returns11): size was %d", size);
-        *failed = 1;
-    }
+    ASSERT(size == 11, "getStringSize_withString_HelloWorld_andIncludeNull_returns11): size was %d", size);
+}
+
+TEST(findDFirstirective_withDirectivePresent_returnsPopulatedSearchResult)
+{
+    #if 0
+    char* directive = "{{CONTENT}}";
+    char* content = "sldjkf sdflkjs kldf sdflkjs\n lkdfjs d{{CONTENT}} asdfkljsldkjf";
+    DirectiveSearchResult result = findFirstDirective(content, directive);
+    ASSERT(result.found == true, "couldn't find directive %s in %s", directive, content);
+    ASSERT(result.startIndex == 38, "wrong startIndex: %d", result.startIndex);
+    ASSERT(result.endIndex == 48, "wrong endIndex: %d", result.endIndex);
+    #endif
 }
 
 int run_tests()
@@ -117,6 +95,11 @@ int run_tests()
         &getFileType_withRchExt_returnsTEMPLATE,
         &getFileType_withRchExtAndLeadingUnderscore_returnsLAYOUT,
         &getTemplateOutputFilename_replaces_rch_with_html,
+        &getStringSize_withEmptyString_andNotIncludeNull_returns0,
+        &getStringSize_withEmptyString_andIncludeNull_returns0,
+        &getStringSize_withString_HelloWorld_andNotIncludeNull_returns10,
+        &getStringSize_withString_HelloWorld_andIncludeNull_returns11,
+        &findDFirstirective_withDirectivePresent_returnsPopulatedSearchResult,
     };
 
     int t;

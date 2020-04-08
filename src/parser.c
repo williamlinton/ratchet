@@ -200,37 +200,39 @@ DirectiveSearchResult findFirstDirective(char* content, char* directive)
     result.endIndex = -1;
     result.found = false;
 
-    char found_td[MAX_TD_SIZE];
     int found_td_index = -1;
     int found_td_index_start = -1;
-    bool found_full_td = false;
     int li;
     for (li = 0; li < layoutContentLength; li++)
     {
-        // Start found td
+        // Nothing found yet
         char currentChar = content[li];
         if (found_td_index == -1)
         {
+            // Start found td
             if (directive[0] == currentChar)
             {
-                found_full_td = true;
-                break;
+                found_td_index = 0;
+                found_td_index_start = li;
             }
         }
+        // Already found something
         else
         {
-            // Replace and reset found td
-            if ((found_td_index + 1) == td_content_size)
+            // Middle of td
+            if (directive[found_td_index + 1] == currentChar)
             {
-                found_td_index = -1;
-                found_td_index_start = -1;
+                ++found_td_index;
+                // End of td
+                if ((found_td_index + 1) == td_content_size)
+                {
+                    result.found = true;
+                    result.startIndex = found_td_index_start;
+                    result.endIndex = found_td_index;
+                    break;
+                }
             }
-            // Continue found td
-            else if (directive[found_td_index + 1] == currentChar)
-            {
-                found_td[++found_td_index] = currentChar;
-            }
-            // Reset found td
+            // Discover this is not td
             else
             {
                 found_td_index = -1;

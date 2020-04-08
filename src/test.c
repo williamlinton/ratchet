@@ -1,7 +1,7 @@
 #define ASSERT(x, msg, ...) if (!x) { printf(msg, __VA_ARGS__); *failed = 1; }
 #define TEST(name) void name(int* failed)
 
-#define TEST_COUNT 11
+#define TEST_COUNT 13
 
 TEST(getFileType_withHtmlExt_returnsHTML)
 {
@@ -72,13 +72,37 @@ TEST(getStringSize_withString_HelloWorld_andIncludeNull_returns11)
 
 TEST(findDFirstirective_withDirectivePresent_returnsPopulatedSearchResult)
 {
-    #if 0
+    #if 1
     char* directive = "{{CONTENT}}";
     char* content = "sldjkf sdflkjs kldf sdflkjs\n lkdfjs d{{CONTENT}} asdfkljsldkjf";
     DirectiveSearchResult result = findFirstDirective(content, directive);
-    ASSERT(result.found == true, "couldn't find directive %s in %s", directive, content);
+    ASSERT(result.found == true, "\ncouldn't find directive %s in %s", directive, content);
     ASSERT(result.startIndex == 38, "wrong startIndex: %d", result.startIndex);
     ASSERT(result.endIndex == 48, "wrong endIndex: %d", result.endIndex);
+    #endif
+}
+
+TEST(findDFirstirective_withDirectiveAtEndOfString_returnsPopulatedSearchResult)
+{
+    #if 1
+    char* directive = "{{CONTENT}}";
+    char* content = "sldjkf sdflkjs kldf sdflkjs\n lkdfjs d{{CONTENT}}";
+    DirectiveSearchResult result = findFirstDirective(content, directive);
+    ASSERT(result.found == true, "\ncouldn't find directive %s in %s", directive, content);
+    ASSERT(result.startIndex == 38, "wrong startIndex: %d", result.startIndex);
+    ASSERT(result.endIndex == 48, "wrong endIndex: %d", result.endIndex);
+    #endif
+}
+
+TEST(findDFirstirective_withNoDirectiveButCurlyBraces_returnsPopulatedSearchResult)
+{
+    #if 1
+    char* directive = "{{CONTENT}}";
+    char* content = "sldjkf sdflkjs kldf sdflkjs\n lkdfjs d{{ASDF}}";
+    DirectiveSearchResult result = findFirstDirective(content, directive);
+    ASSERT(result.found == false, "\nfalse positive: found directive %s in %s", directive, content);
+    ASSERT(result.startIndex == -1, "erroneously set startIndex: %d", result.startIndex);
+    ASSERT(result.endIndex == -1, "erroneously endIndex: %d", result.endIndex);
     #endif
 }
 
@@ -100,7 +124,10 @@ int run_tests()
         &getStringSize_withString_HelloWorld_andNotIncludeNull_returns10,
         &getStringSize_withString_HelloWorld_andIncludeNull_returns11,
         &findDFirstirective_withDirectivePresent_returnsPopulatedSearchResult,
+        &findDFirstirective_withDirectiveAtEndOfString_returnsPopulatedSearchResult,
+        &findDFirstirective_withNoDirectiveButCurlyBraces_returnsPopulatedSearchResult,
     };
+
 
     int t;
     for (t = 0; t < TEST_COUNT; t++)

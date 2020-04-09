@@ -9,6 +9,9 @@ Eventually:
     - Do we want to handle a case where parsed file contents would not have one?
 - Use macro instead of #if LOGGING
     - log("a", asdf)
+- Pull out utility functions into util.c
+- Separate platform specific code from logic code
+    - Move platform-specific calls to function pointers
 
 Important:
 - Add Readme.md

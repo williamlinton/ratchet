@@ -19,22 +19,42 @@ enum TemplateDirective
     TDContent
 };
 
-char** substr(char* input, int startIndex, int length)
+substr(char* input, char** output, int startIndex, int length)
 {
     int i;
-    char* output = malloc(length);
-    for (i = startIndex; i < startIndex + length; i++)
+    int o;
+    *output = malloc(length + 1);
+    for (i = startIndex, o = 0; i < startIndex + length; i++, o++)
     {
-        output[i] = input[i];
-        if (input[i] == NULL) break;
+        if (input[i] == NULL)
+        {
+            (*output)[o] = NULL;
+            break;
+        }
+        (*output)[o] = input[i];
     }
-    return &output;
+    (*output)[o] = NULL;
 }
 
 bool stringsAreEqual(char* s1, char* s2, int length1, int length2)
 {
     int index = 0;
     while (index < length1 && index < length2)
+    {
+        if (s1[index] != s2[index])
+        {
+            return false;
+        }
+        if (s1[index] == NULL || s2[index] == NULL) break;
+        ++index;
+    }
+    return true;
+}
+
+bool stringsAreEqual2(char* s1, char* s2)
+{
+    int index = 0;
+    while (true)
     {
         if (s1[index] != s2[index])
         {
@@ -187,6 +207,7 @@ void generate(char* sourceDir, char* outputDir)
 
     settings.layoutFileContents = malloc(MAX_LAYOUT_FILE_SIZE);
     settings.layoutFileContentsLength = fread(settings.layoutFileContents, sizeof(char), MAX_LAYOUT_FILE_SIZE, layoutFile);
+    printf("LAYOUT FILE CONTENTS:\n%s\n----------", settings.layoutFileContents);
 
     parse(&commands, &settings);
 }
@@ -228,7 +249,7 @@ DirectiveSearchResult findFirstDirective(char* content, char* directive)
                 {
                     result.found = true;
                     result.startIndex = found_td_index_start;
-                    result.endIndex = found_td_index;
+                    result.endIndex = found_td_index_start + td_content_size;
                     break;
                 }
             }
@@ -248,73 +269,30 @@ DirectiveSearchResult findFirstDirective(char* content, char* directive)
 void parseTemplate(char* templateContent, char* layoutContent, char** outputContent, int* outputContentLength)
 { 
     int templateContentLength = getStringSize(templateContent, false);
-    int layoutContentLength = getStringSize(templateContent, false);
+    int layoutContentLength = getStringSize(layoutContent, false);
     *outputContent = malloc(templateContentLength + layoutContentLength);
 
-    char* td_content = TD_CONTENT;
-    int td_content_size = getStringSize(td_content, false);
+    DirectiveSearchResult contentResult = findFirstDirective(layoutContent, TD_CONTENT);
 
-    char found_td[MAX_TD_SIZE];
-    int found_td_index = -1;
-    int found_td_index_start = -1;
-    bool found_full_td = false;
-    int li;
-    for (li = 0; li < layoutContentLength; li++)
+    if (contentResult.found)
     {
-        // Start found td
-        char currentChar = layoutContent[li];
-        if (found_td_index == -1)
-        {
-            if (td_content[0] == currentChar)
-            {
-                found_full_td = true;
-                break;
-            }
-        }
-        else
-        {
-            // Replace and reset found td
-            if ((found_td_index + 1) == td_content_size)
-            {
-                found_td_index = -1;
-                found_td_index_start = -1;
-            }
-            // Continue found td
-            else if (td_content[found_td_index + 1] == currentChar)
-            {
-                found_td[++found_td_index] = currentChar;
-            }
-            // Reset found td
-            else
-            {
-                found_td_index = -1;
-                found_td_index_start = -1;
-            }
-            
-        }
+        char* preContent;
+        substr(layoutContent, &preContent, 0, contentResult.startIndex);
+        printf("preContent:\n%s\n", preContent);
+        char* postContent;
+        substr(layoutContent, &postContent, contentResult.endIndex, layoutContentLength - contentResult.endIndex);
+        printf("postContent:\n%s\n", postContent);
+        printf("Templated:\n%s%s%s\nEnd Templated\n", preContent, templateContent, postContent);
+
+        sprintf(*outputContent, "%s%s%s", preContent, templateContent, postContent);
+        printf("Output content:\n%s", *outputContent);
     }
 
-    if (found_full_td)
-    {
-        char* preContent = substr(layoutContent, 0, found_td_index_start);
-        int tdEndIndex = found_td_index_start + td_content_size;
-        char* postContent = substr(layoutContent, tdEndIndex, layoutContentLength - tdEndIndex);
-        //printf("Templated:\n%s%s%s\n", preContent, templateContent, postContent);
-    }
+    // *outputContentLength = getStringSize(*outputContent, false);
 
-#if 1
-    sprintf(*outputContent, templateContent);
-
-    #if LOGGING
-    printf("output content: %s\n", *outputContent);
-    #endif
-#endif
-
-    *outputContentLength = getStringSize(*outputContent, false);
-
-    #if LOGGING
-    printf("output content length: %d\n", *outputContentLength);
-    #endif
+    // #if LOGGING
+    // printf("output content length: %d\n", *outputContentLength);
+    // #endif
 }
 
 bool validate(Commands* commands, TemplateSettings* settings)
@@ -471,6 +449,7 @@ int parse(Commands* commands, TemplateSettings* settings)
                 char* outputContent;
                 int outputFileSize;
                 parseTemplate(templateContent, settings->layoutFileContents, &outputContent, &outputFileSize);
+                printf("Output content (final):\n\%", outputContent);
 
                 #if LOGGING
                 printf("output content in parse(): %s\n", outputContent);

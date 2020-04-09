@@ -1,7 +1,7 @@
-#define ASSERT(x, msg, ...) if (!x) { printf(msg, __VA_ARGS__); *failed = 1; }
+#define ASSERT(x, msg, ...) if (!x) { printf("\n"); printf(msg, __VA_ARGS__); *failed = 1; }
 #define TEST(name) void name(int* failed)
 
-#define TEST_COUNT 13
+#define TEST_COUNT 17
 
 TEST(getFileType_withHtmlExt_returnsHTML)
 {
@@ -106,6 +106,42 @@ TEST(findDFirstirective_withNoDirectiveButCurlyBraces_returnsPopulatedSearchResu
     #endif
 }
 
+TEST(substr_atBeginningOfString)
+{
+    char* str = "HelloWorld and then some";
+    char* result;
+    substr(str, &result, 0, 10);
+    int length = strlen(result);
+    ASSERT(stringsAreEqual2("HelloWorld", result), "Expected \"HelloWorld\", got %s", result);
+}
+
+TEST(substr_atEndOfString)
+{
+    char* str = "HelloWorld and then some";
+    char* result;
+    substr(str, &result, 14, 10);
+    int length = strlen(result);
+    ASSERT(stringsAreEqual2(" then some", result), "Expected \" then some\", got %s", result);
+}
+
+TEST(substr_inMiddleOfString)
+{
+    char* str = "HelloWorld and then some";
+    char* result;
+    substr(str, &result, 10, 10);
+    int length = strlen(result);
+    ASSERT(stringsAreEqual2(" and then ", result), "Expected \" and then \", got %s", result);
+}
+
+TEST(substr_pastEndOfString)
+{
+    char* str = "HelloWorld and then some";
+    char* result;
+    substr(str, &result, 20, 10);
+    int length = strlen(result);
+    ASSERT(stringsAreEqual2("some", result), "Expected \"some\", got %s", result);
+}
+
 int run_tests()
 {
     int failed = 0;
@@ -126,6 +162,10 @@ int run_tests()
         &findDFirstirective_withDirectivePresent_returnsPopulatedSearchResult,
         &findDFirstirective_withDirectiveAtEndOfString_returnsPopulatedSearchResult,
         &findDFirstirective_withNoDirectiveButCurlyBraces_returnsPopulatedSearchResult,
+        &substr_atBeginningOfString,
+        &substr_atEndOfString,
+        &substr_inMiddleOfString,
+        &substr_pastEndOfString,
     };
 
 

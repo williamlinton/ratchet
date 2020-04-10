@@ -206,10 +206,14 @@ void generate(char* sourceDir, char* outputDir)
     FILE* layoutFile = fopen(settings.layoutFilePath, "r");
 
     settings.layoutFileContents = malloc(MAX_LAYOUT_FILE_SIZE);
+    printf("LAYOUT FILE CONTENTS, pre-read:\n%s\n----------\n", settings.layoutFileContents);
     settings.layoutFileContentsLength = fread(settings.layoutFileContents, sizeof(char), MAX_LAYOUT_FILE_SIZE, layoutFile);
-    printf("LAYOUT FILE CONTENTS:\n%s\n----------", settings.layoutFileContents);
+    printf("LAYOUT FILE CONTENTS:\n%s\n----------\n", settings.layoutFileContents);
 
     parse(&commands, &settings);
+
+    printf("\n----------\n");
+    printf("Succeeded!\n");
 }
 
 DirectiveSearchResult findFirstDirective(char* content, char* directive)
@@ -271,6 +275,7 @@ void parseTemplate(char* templateContent, char* layoutContent, char** outputCont
     int templateContentLength = getStringSize(templateContent, false);
     int layoutContentLength = getStringSize(layoutContent, false);
     *outputContent = malloc(templateContentLength + layoutContentLength);
+    printf("Allocation size for output content: %d\n", templateContentLength + layoutContentLength);
 
     DirectiveSearchResult contentResult = findFirstDirective(layoutContent, TD_CONTENT);
 
@@ -286,6 +291,7 @@ void parseTemplate(char* templateContent, char* layoutContent, char** outputCont
 
         sprintf(*outputContent, "%s%s%s", preContent, templateContent, postContent);
         printf("Output content:\n%s", *outputContent);
+        *outputContentLength = strlen(*outputContent);
     }
 
     // *outputContentLength = getStringSize(*outputContent, false);
@@ -449,7 +455,6 @@ int parse(Commands* commands, TemplateSettings* settings)
                 char* outputContent;
                 int outputFileSize;
                 parseTemplate(templateContent, settings->layoutFileContents, &outputContent, &outputFileSize);
-                printf("Output content (final):\n\%", outputContent);
 
                 #if LOGGING
                 printf("output content in parse(): %s\n", outputContent);

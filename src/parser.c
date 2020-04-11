@@ -203,11 +203,39 @@ void generate(char* sourceDir, char* outputDir)
     printf("Layout file path: %s\n", settings.layoutFilePath);
     #endif
 
-    FILE* layoutFile = fopen(settings.layoutFilePath, "r");
+    LPCSTR lpFileName = settings.layoutFilePath;
+    HANDLE layoutFileHandle = CreateFileA(lpFileName, 
+                       FILE_READ_ATTRIBUTES,
+                       FILE_SHARE_READ,
+                       0,
+                       OPEN_EXISTING,
+                       0,
+                       0);
+   /* 
+  LPCSTR                lpFileName,
+  DWORD                 dwDesiredAccess,
+  DWORD                 dwShareMode,
+  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+  DWORD                 dwCreationDisposition,
+  DWORD                 dwFlagsAndAttributes,
+  HANDLE                hTemplateFile
+);
+*/
+    LARGE_INTEGER layoutFileSizeRaw = {0};
+    if (!GetFileSizeEx(layoutFileHandle, &layoutFileSizeRaw))
+    {
+        DWORD error = GetLastError();
+    }
+    printf("Quad part: %d\n", layoutFileSizeRaw.QuadPart);
+    long layoutFileSize = layoutFileSizeRaw.QuadPart;
 
-    settings.layoutFileContents = malloc(MAX_LAYOUT_FILE_SIZE);
+    FILE* layoutFile = fopen(settings.layoutFilePath, "r");
+    printf("Layout file actual size: %d\n", layoutFileSize);
+
+    settings.layoutFileContents = malloc(layoutFileSize + 1);
+    memset(settings.layoutFileContents, 0, layoutFileSize);
     printf("LAYOUT FILE CONTENTS, pre-read:\n%s\n----------\n", settings.layoutFileContents);
-    settings.layoutFileContentsLength = fread(settings.layoutFileContents, sizeof(char), MAX_LAYOUT_FILE_SIZE, layoutFile);
+    settings.layoutFileContentsLength = fread(settings.layoutFileContents, sizeof(char), layoutFileSize, layoutFile);
     printf("LAYOUT FILE CONTENTS:\n%s\n----------\n", settings.layoutFileContents);
 
     parse(&commands, &settings);

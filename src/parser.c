@@ -151,7 +151,7 @@ int getFileType(char* filename)
     return OTHER;
 }
 
-void generate(char* sourceDir, char* outputDir)
+void generate(PlatformApi api, char* sourceDir, char* outputDir)
 {
     Commands commands;
     commands.oldPath = (char *)malloc(sizeof(char) * MAX_PATH * COMMAND_BLOCK_SIZE);
@@ -203,6 +203,9 @@ void generate(char* sourceDir, char* outputDir)
     printf("Layout file path: %s\n", settings.layoutFilePath);
     #endif
 
+
+
+#if 0
     LPCSTR lpFileName = settings.layoutFilePath;
     HANDLE layoutFileHandle = CreateFileA(lpFileName, 
                        FILE_READ_ATTRIBUTES,
@@ -211,23 +214,21 @@ void generate(char* sourceDir, char* outputDir)
                        OPEN_EXISTING,
                        0,
                        0);
-   /* 
-  LPCSTR                lpFileName,
-  DWORD                 dwDesiredAccess,
-  DWORD                 dwShareMode,
-  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-  DWORD                 dwCreationDisposition,
-  DWORD                 dwFlagsAndAttributes,
-  HANDLE                hTemplateFile
-);
-*/
     LARGE_INTEGER layoutFileSizeRaw = {0};
     if (!GetFileSizeEx(layoutFileHandle, &layoutFileSizeRaw))
     {
         DWORD error = GetLastError();
     }
+    if (!CloseHandle(layoutFileHandle))
+    {
+        printf("Could not close layout file handle!\n");
+    }
     printf("Quad part: %d\n", layoutFileSizeRaw.QuadPart);
     long layoutFileSize = layoutFileSizeRaw.QuadPart;
+    #endif
+    
+    long layoutFileSize;
+    api.RchGetFileSize(settings.layoutFilePath, &layoutFileSize);
 
     FILE* layoutFile = fopen(settings.layoutFilePath, "r");
     printf("Layout file actual size: %d\n", layoutFileSize);
@@ -236,6 +237,7 @@ void generate(char* sourceDir, char* outputDir)
     memset(settings.layoutFileContents, 0, layoutFileSize);
     printf("LAYOUT FILE CONTENTS, pre-read:\n%s\n----------\n", settings.layoutFileContents);
     settings.layoutFileContentsLength = fread(settings.layoutFileContents, sizeof(char), layoutFileSize, layoutFile);
+    fclose(layoutFile);
     printf("LAYOUT FILE CONTENTS:\n%s\n----------\n", settings.layoutFileContents);
 
     parse(&commands, &settings);

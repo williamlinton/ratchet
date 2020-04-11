@@ -37,3 +37,10 @@ typedef struct DirectiveSearchResult
     int startIndex;
     int endIndex;
 } DirectiveSearchResult;
+
+typedef struct PlatformApi
+{
+    int (*RchGetFileSize)(char*, long*);
+    int (*RchScanDirectory)(char**, int*);
+    int (*RchCopyFile)(char*, char*);
+} PlatformApi;

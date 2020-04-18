@@ -412,6 +412,12 @@ void scan(char* sourceDir, char* outputDir, Commands* commands)
         if (fileType != -1)
         {
             sprintf(oldAddress, oldPath);
+            if (fileType == TEMPLATE)
+            {
+                char newFilename[MAX_PATH];
+                getTemplateOutputFilename(ffd.cFileName, newFilename);
+                sprintf(newPath, "%s\\%s", outputDir, newFilename);
+            }
             sprintf(newAddress, newPath);
             commands->fileType[commands->commandCount] = fileType;
             commands->commandCount++;
